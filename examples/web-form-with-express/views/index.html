@@ -11,86 +11,70 @@
     <!-- import the webpage's stylesheet -->
     <link rel="stylesheet" href="/style.css" />
 
+    <!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+
+    <!-- Compiled and minified JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+
     <!-- import the webpage's client-side javascript file -->
     <script src="/client.js" defer></script>
   </head>
   <body>
     <header>
-      <h1>Notion internal integration demo</h1>
+      <h1 class="center">Create Recurring Tasks in Notion</h1>
     </header>
-
-    <main>
-      <h2>Goals</h2>
-      <p>
-        Use this demo to see how to incorporate Notion's public API into your
-        app. Build on this demo as needed to meet your own app's requirements!
-      </p>
-      <p>
-        Open the Notion page set in your environment variables to see workspace
-        updates in real-time. :)
-      </p>
-      <table>
-        <tr>
-          <th>Step</th>
-          <th>Response</th>
-        </tr>
-        <tr>
-          <td>
-            <h3>1. Create a new database</h3>
-            <form id="databaseForm">
-              <label for="dbName">Database name</label>
-              <input type="text" id="dbName" />
-              <input type="submit" />
-            </form>
-          </td>
-          <!-- The database form response will be appended here after submitting it -->
-          <td id="dbResponse"></td>
-        </tr>
-        <tr>
-          <td>
-            <h3>2. Add a page to the database</h3>
-            <form id="pageForm">
-              <label for="newPageDB">Parent DB ID</label>
-              <input type="text" id="newPageDB" />
-              <label for="newPageName">New page name</label>
-              <input type="text" id="newPageName" />
-              <label for="header">Header 1</label>
-              <input type="text" id="header" />
-              <input type="submit" />
-            </form>
-          </td>
-          <!-- The page form response will be appended here after submitting it -->
-          <td id="pageResponse"></td>
-        </tr>
-        <tr>
-          <td>
-            <h3>3. Add content to the page</h3>
-            <form id="blocksForm">
-              <label for="pageID">Page ID</label>
-              <input type="text" id="pageID" />
-              <label for="content">Content</label>
-              <input type="text" id="content" />
-              <input type="submit" />
-            </form>
-          </td>
-          <!-- The page content/blocks form response will be appended here after submitting it -->
-          <td id="blocksResponse"></td>
-        </tr>
-        <tr>
-          <td>
-            <h3>4. Add a comment to the content</h3>
-            <form id="commentForm">
-              <label for="pageIDComment">Page ID</label>
-              <input type="text" id="pageIDComment" />
-              <label for="comment">Comment</label>
-              <input type="text" id="comment" />
-              <input type="submit" />
-            </form>
-          </td>
-          <!-- The comment form response will be appended here after submitting it -->
-          <td id="commentResponse"></td>
-        </tr>
-      </table>
+    <main class="container">
+      <h2>How to use this thing</h2>
+        <ul>
+          <li><strong>Parent task ID</strong> - this is the 32 character ID of the task which you've created in Notion for which you would like to set up recurrence. 
+            In the app, you can find this ID by copying the link of a given record (three dots, "copy link", e.g. https://www.notion.so/Thhis-is-a-new-task-with-due-date-ef5c2b3c5b3344c9adc5a7871cb3c822?pvs=4) 
+            and taking the ID from the url (in this example it would be just ef5c2b3c5b3344c9adc5a7871cb3c822). 
+          </li>
+        </ul>
+      <div class="row">
+        <div class = "col s9">
+          <form id="recurrenceForm">
+          <div class="row">
+            <div class="input-field col s6">
+              <input placeholder="32 character ID" id="task_id" type="text" class="validate">
+              <label for="task_id">Parent task ID</label>
+            </div>
+            <div class="input-field col s6">
+              <select id="recurrence_type">
+                <option value="Daily">Daily</option>
+              </select>
+              <label>Recurrence Interval</label>
+            </div>
+          </div>
+          <div class="row">
+            <div class="input-field col s6">
+              <input id="start_time" class="timepicker" type="text" class="validate">
+              <label for="start_time">Start Time</label>
+            </div>
+            <div class="input-field col s6">
+              <input class="timepicker" id="end_time" type="text" class="validate">
+              <label for="end_time">End Time</label>
+            </div>
+          </div>
+          <div class="row">
+            <div class="input-field col s6">
+              <input id="start_date" class="datepicker" type="text" class="validate">
+              <label for="start_date">Start Date</label>
+            </div>
+            <div class="input-field col s6">
+              <input id="end_date" class="datepicker" type="text" class="validate">
+              <label for="end_date">End Date</label>
+            </div>
+          </div>
+          <button class="btn waves-effect waves-light" type="submit" name="action">Submit</button>
+          </form>
+        </div>
+        <div class = "col s3">
+          <p id="results"></p>
+        </div>
+      </div>
     </main>
   </body>
 </html>

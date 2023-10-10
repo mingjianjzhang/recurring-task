@@ -1,20 +1,46 @@
 // This file is run by the browser each time your view template is loaded
 
+
+document.addEventListener('DOMContentLoaded', function() {
+  var startDate = document.querySelector('#start_date');
+  var today = new Date();
+  var startDateInstance = M.Datepicker.init(startDate, {
+    format: 'yyyy-mm-dd',
+    defaultDate: today,
+    setDefaultDate: true
+  });
+
+  var endDate = document.querySelector('#end_date');
+  var monthLater = new Date();
+  monthLater.setDate(today.getDate() + 30)
+  var endDateInstance = M.Datepicker.init(endDate, {
+    format: 'yyyy-mm-dd',
+    defaultDate: monthLater,
+    setDefaultDate: true
+  });
+
+
+
+  var timeElems = document.querySelectorAll('.timepicker');
+  var timeInstances = M.Timepicker.init(timeElems, {
+    duration: 300,
+    twelveHour: false
+  });
+  var selectElems = document.querySelectorAll('select');
+  var selectInstances = M.FormSelect.init(selectElems, {});
+
+
+});
 /**
  * Define variables that reference elements included in /views/index.html:
  */
 
+// Buttons
+const getButton = document.getElementById("getItem")
 // Forms
-const dbForm = document.getElementById("databaseForm")
-const pageForm = document.getElementById("pageForm")
-const blocksForm = document.getElementById("blocksForm")
-const commentForm = document.getElementById("commentForm")
-
-// Table cells where API responses will be appended
-const dbResponseEl = document.getElementById("dbResponse")
-const pageResponseEl = document.getElementById("pageResponse")
-const blocksResponseEl = document.getElementById("blocksResponse")
-const commentResponseEl = document.getElementById("commentResponse")
+const recurrenceForm = document.getElementById("recurrenceForm")
+// Response data
+const responseElement = document.getElementById("results")
 
 /**
  * Functions to handle appending new content to /views/index.html
@@ -64,79 +90,41 @@ const appendBlocksResponse = function (apiResponse, el) {
  * Attach submit event handlers to each form included in /views/index.html
  */
 
-// Attach submit event to each form
-dbForm.onsubmit = async function (event) {
+recurrenceForm.onsubmit = async function (event) {
   event.preventDefault()
+  const parentTaskId = event.target.task_id.value;
+  const recurrenceType = event.target.recurrence_type.value;
+  const startTime = event.target.start_time.value
+  const endTime = event.target.end_time.value
+  const startDate = event.target.start_date.value
+  const endDate = event.target.end_date.value
 
-  const dbName = event.target.dbName.value
-  const body = JSON.stringify({ dbName })
-
-  const newDBResponse = await fetch("/databases", {
+  const body = JSON.stringify({ parentTaskId, recurrenceType, startTime, endTime, startDate, endDate})
+  console.log(body);
+  const recurrentTasksResponse = await fetch("/recurrentTasks", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body,
-  })
-  const newDBData = await newDBResponse.json()
+    body
+  });
 
-  appendApiResponse(newDBData, dbResponseEl)
+  const recurrentTasksData = await recurrentTasksResponse.json()
+  appendApiResponse(recurrentTasksData, responseElement)
 }
 
-pageForm.onsubmit = async function (event) {
-  event.preventDefault()
+getButton.onclick = async function (event) {
+  console.log("I was clicked, bro");
 
-  const dbID = event.target.newPageDB.value
-  const pageName = event.target.newPageName.value
-  const header = event.target.header.value
-  const body = JSON.stringify({ dbID, pageName, header })
-
-  const newPageResponse = await fetch("/pages", {
+  const request = { itemId: "68a4d1a9-c8d0-41cc-b5ef-d7c0689bd790" }
+  const getItemResponse = await fetch("/getItem", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body,
+    body: JSON.stringify(request)
   })
 
-  const newPageData = await newPageResponse.json()
-  appendApiResponse(newPageData, pageResponseEl)
-}
-
-blocksForm.onsubmit = async function (event) {
-  event.preventDefault()
-
-  const pageID = event.target.pageID.value
-  const content = event.target.content.value
-  const body = JSON.stringify({ pageID, content })
-
-  const newBlockResponse = await fetch("/blocks", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body,
-  })
-
-  const newBlockData = await newBlockResponse.json()
-  appendBlocksResponse(newBlockData, blocksResponseEl)
-}
-
-commentForm.onsubmit = async function (event) {
-  event.preventDefault()
-
-  const pageID = event.target.pageIDComment.value
-  const comment = event.target.comment.value
-  const body = JSON.stringify({ pageID, comment })
-
-  const newCommentResponse = await fetch("/comments", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body,
-  })
-
-  const newCommentData = await newCommentResponse.json()
-  appendApiResponse(newCommentData, commentResponseEl)
+  const getItemData = await getItemResponse.json()
+  appendApiResponse(getItemData, dbResponseEl)
 }
