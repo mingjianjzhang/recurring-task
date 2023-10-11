@@ -20,12 +20,6 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
 
-
-  var timeElems = document.querySelectorAll('.timepicker');
-  var timeInstances = M.Timepicker.init(timeElems, {
-    duration: 300,
-    twelveHour: false
-  });
   var selectElems = document.querySelectorAll('select');
   var selectInstances = M.FormSelect.init(selectElems, {});
 
@@ -119,6 +113,12 @@ recurrenceForm.onsubmit = async function (event) {
   const endDate = event.target.end_date.value
   const recurrenceDays = Array.from(selectDays.querySelectorAll("option:checked")).map(option => option.value);
 
+  // validations
+  const timeRegExp = new RegExp('^(2[0-3]|[01]?[0-9]):([0-5]?[0-9])$')
+  if (!timeRegExp.test(startTime) || !timeRegExp.test(endTime)) {
+    appendApiResponse({message: "failed", data:"time must be in the format HH:mm"}, responseElement);
+    return;
+  }
   const body = JSON.stringify({ parentTaskId, recurrenceType, startTime, endTime, startDate, endDate, recurrenceDays})
   const recurrentTasksResponse = await fetch("/recurrentTasks", {
     method: "POST",
