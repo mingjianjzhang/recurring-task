@@ -55,12 +55,12 @@ const appendApiResponse = function (apiResponse, el) {
   newParagraphSuccessMsg.innerHTML = "Result: " + apiResponse.message
   el.appendChild(newParagraphSuccessMsg)
   // See browser console for more information
-  if (apiResponse.message === "error") return
-
-  // Add ID of Notion item (db, page, comment) to UI
-  const newParagraphId = document.createElement("p")
-  newParagraphId.innerHTML = "ID: " + apiResponse.data.id
-  el.appendChild(newParagraphId)
+  if (apiResponse.message === "error" || apiResponse.message === "failed") {
+    console.log("this is error");
+    const newParagraphId = document.createElement("p")
+    newParagraphId.innerHTML = "Error message: " + JSON.stringify(apiResponse.data)
+    el.appendChild(newParagraphId);
+  }
 
   // Add URL of Notion item (db, page) to UI
   if (apiResponse.data.url) {

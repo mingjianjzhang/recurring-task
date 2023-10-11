@@ -5,6 +5,23 @@ class Task {
     }
 
     toJsonSchema(startDate, endDate) {
+        let dateSchema;
+        if (endDate !== null) {
+          dateSchema = {
+            date: {
+              "start": startDate.toISOString(),
+              "end": endDate.toISOString()
+            }
+          }
+        } else {
+          dateSchema = {
+            date: {
+              "start": startDate.toISOString()
+            }
+          }
+        }
+
+
         const schema = {
           Task: {
             title: [
@@ -22,12 +39,7 @@ class Task {
               }
            ] 
           },
-          "Due": {
-            date: {
-              "start": startDate.toISOString(),
-              "end": endDate.toISOString()
-            }
-          },
+          "Due": dateSchema,
           "Kanban Status": {
             "type": "select",
             "select": {

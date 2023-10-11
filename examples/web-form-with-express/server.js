@@ -18,34 +18,43 @@ app.get("/", function (request, response) {
 app.post("/recurrentTasks", async function (request, response) {
   const { parentTaskId, recurrenceType, startTime, endTime, startDate, endDate } = request.body
 
+
   let parentTaskName = '';
   let databaseId = '';
   let parentTask;
   // get name of parent task
   try {
     parentTask = await notion.pages.retrieve({page_id: parentTaskId});
+    response.json({message: "success", data: testTask});
     databaseId = parentTask.parent.database_id;
-    console.log(databaseId);
     const parentTaskTitle = parentTask.properties['Task'].title.find(taskInfo => {
       return taskInfo.type == 'text';
     })
     parentTaskName = parentTaskTitle.plain_text;
   } catch (error) {
     console.log(error);
-    response.json({message: "failed", data: error})
+    response.json({message: "error", data: error})
   }
 
   const subTask = new Task(parentTaskName, parentTaskId);
+  let dateString;
+  let recurStartTime;
+  let recurEndTime;
 
-  // it's gonna break if start and end time are not the same day. but that's not possible with the
-  // UI anyway
-  const dateString = startDate + "T" + startTime + ":00.000-07:00";
-  const recurStartTime = new Date(dateString);
-
+  if (startTime) {
+    if (!endTime) {
+      response.json({message: "error", data: "Must specify End Time if Start Time is specified"})
+    }
+    dateString = startDate + "T" + startTime + ":00.000-07:00";
+    recurStartTime = new Date(dateString);
+    recurEndTime = new Date(dateString);
+    const recurEndTimeSplit = endTime.split(':');
+    recurEndTime.setHours(parseInt(recurEndTimeSplit[0]), parseInt(recurEndTimeSplit[1]));  
+  } else {
+    dateString = startDate
+    recurStartTime = new Date(dateString);
+  }
   // TODO: add validation if no endtime is specified
-  const recurEndTime = new Date(dateString);
-  const recurEndTimeSplit = endTime.split(':');
-  recurEndTime.setHours(parseInt(recurEndTimeSplit[0]), parseInt(recurEndTimeSplit[1]));
 
 
   const terminalDateString = endDate + "T" + "23:59:00.000-07:00";
@@ -63,12 +72,15 @@ app.post("/recurrentTasks", async function (request, response) {
         },
         properties: subTask.toJsonSchema(recurStartTime, recurEndTime)
       })
+      console.log("created new item");
       console.log(newItem);
     } catch (error) {
       console.log(error);
     }
     recurStartTime.setDate(recurStartTime.getDate() + 1);
-    recurEndTime.setDate(recurEndTime.getDate() + 1);
+    if (recurEndTime) {
+      recurEndTime.setDate(recurEndTime.getDate() + 1);
+    }
   }
 
   response.json({"message": "nice"})  
