@@ -44,8 +44,23 @@
             <div class="input-field col s6">
               <select id="recurrence_type">
                 <option value="Daily">Daily</option>
+                <option value="Custom">Custom</option>
               </select>
               <label>Recurrence Interval</label>
+            </div>
+          </div>
+          <div id="select_days" class="row hide">
+            <div class="input-field col s12">
+              <select id="day_selection" multiple>
+                <option value="0">Every Sunday</option>
+                <option value="1">Every Monday</option>
+                <option value="2">Every Tuesday</option>
+                <option value="3">Every Wednesday</option>
+                <option value="4">Every Thursday</option>
+                <option value="5">Every Friday</option>
+                <option value="6">Every Saturday</option>
+              </select>
+              <label>Recurrence Days</label>
             </div>
           </div>
           <div class="row">

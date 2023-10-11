@@ -16,8 +16,7 @@ app.get("/", function (request, response) {
 })
 
 app.post("/recurrentTasks", async function (request, response) {
-  const { parentTaskId, recurrenceType, startTime, endTime, startDate, endDate } = request.body
-
+  const { parentTaskId, recurrenceType, startTime, endTime, startDate, endDate, recurrenceDays } = request.body
 
   let parentTaskName = '';
   let databaseId = '';
@@ -25,7 +24,6 @@ app.post("/recurrentTasks", async function (request, response) {
   // get name of parent task
   try {
     parentTask = await notion.pages.retrieve({page_id: parentTaskId});
-    response.json({message: "success", data: testTask});
     databaseId = parentTask.parent.database_id;
     const parentTaskTitle = parentTask.properties['Task'].title.find(taskInfo => {
       return taskInfo.type == 'text';
@@ -61,6 +59,14 @@ app.post("/recurrentTasks", async function (request, response) {
   const terminalDate = new Date(terminalDateString);
 
   while (recurStartTime.getTime() < terminalDate.getTime()) {
+    if (recurrenceType === 'Custom' && !recurrenceDays.includes(recurStartTime.getDay().toString())) {
+      recurStartTime.setDate(recurStartTime.getDate() + 1);
+      if (recurEndTime) {
+        recurEndTime.setDate(recurEndTime.getDate() + 1);
+      }
+      continue;
+    }
+
     try {
       // create a new sub-task under the Parent Task ID with the correct date.
       // Must also set the Priority and Kanban Status for it to appear on any of the views.

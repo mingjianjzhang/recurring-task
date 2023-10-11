@@ -39,6 +39,8 @@ document.addEventListener('DOMContentLoaded', function() {
 const getButton = document.getElementById("getItem")
 // Forms
 const recurrenceForm = document.getElementById("recurrenceForm")
+const recurrenceType = document.getElementById("recurrence_type")
+const selectDays = document.getElementById("select_days")
 // Response data
 const responseElement = document.getElementById("results")
 
@@ -90,6 +92,20 @@ const appendBlocksResponse = function (apiResponse, el) {
  * Attach submit event handlers to each form included in /views/index.html
  */
 
+recurrenceType.onchange = function (event) {
+  if (event.target.value === 'Custom') {
+    selectDays.classList.remove('hide');
+    selectDays.classList.add('show');
+    console.log(selectDays.classList);
+  } else if (event.target.value === 'Daily') {
+    selectDays.classList.remove('show');
+    selectDays.classList.add('hide');
+    selectDays.selectedIndex = -1;
+  }
+
+
+}
+
 recurrenceForm.onsubmit = async function (event) {
   event.preventDefault()
   const parentTaskId = event.target.task_id.value;
@@ -98,9 +114,9 @@ recurrenceForm.onsubmit = async function (event) {
   const endTime = event.target.end_time.value
   const startDate = event.target.start_date.value
   const endDate = event.target.end_date.value
+  const recurrenceDays = Array.from(selectDays.querySelectorAll("option:checked")).map(option => option.value);
 
-  const body = JSON.stringify({ parentTaskId, recurrenceType, startTime, endTime, startDate, endDate})
-  console.log(body);
+  const body = JSON.stringify({ parentTaskId, recurrenceType, startTime, endTime, startDate, endDate, recurrenceDays})
   const recurrentTasksResponse = await fetch("/recurrentTasks", {
     method: "POST",
     headers: {
