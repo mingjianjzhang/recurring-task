@@ -41,6 +41,8 @@ const getButton = document.getElementById("getItem")
 const recurrenceForm = document.getElementById("recurrenceForm")
 const recurrenceType = document.getElementById("recurrence_type")
 const selectDays = document.getElementById("select_days")
+// Loading
+const loadingIcon = document.getElementById('loading');
 // Response data
 const responseElement = document.getElementById("results")
 
@@ -108,6 +110,7 @@ recurrenceType.onchange = function (event) {
 
 recurrenceForm.onsubmit = async function (event) {
   event.preventDefault()
+  loadingIcon.classList.remove('hide');
   const parentTaskId = event.target.task_id.value;
   const recurrenceType = event.target.recurrence_type.value;
   const startTime = event.target.start_time.value
@@ -126,6 +129,7 @@ recurrenceForm.onsubmit = async function (event) {
   });
 
   const recurrentTasksData = await recurrentTasksResponse.json()
+  loadingIcon.classList.add('hide')
   appendApiResponse(recurrentTasksData, responseElement)
 }
 
