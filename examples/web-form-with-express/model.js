@@ -4,19 +4,23 @@ class Task {
         this.parentTaskId = parentTaskId;
     }
 
-    toJsonSchema(startDate, endDate) {
+    toJsonSchema(startTime, endTime) {
+
+        this.startTime = startTime;
+        this.endTime = endTime;
+
         let dateSchema;
-        if (endDate !== null) {
+        if (endTime !== null) {
           dateSchema = {
             date: {
-              "start": startDate.toISOString(),
-              "end": endDate.toISOString()
+              "start": startTime.toISOString(),
+              "end": endTime.toISOString()
             }
           }
         } else {
           dateSchema = {
             date: {
-              "start": startDate.toISOString()
+              "start": startTime.toISOString()
             }
           }
         }
@@ -27,7 +31,7 @@ class Task {
             title: [
               {
                 text: {
-                  content: this.title + ` ${startDate.getMonth() + 1}/${startDate.getDate()}`,
+                  content: this.title + ` ${startTime.getMonth() + 1}/${startTime.getDate()}`,
                 },
               },
             ],
@@ -62,4 +66,40 @@ class Task {
     }
 }
 
+class Event {
+  constructor(title, description, startTime, endTime, remindBeforeMinutes) {
+    this.title = title;
+    this.description = description;
+    this.startTime = startTime;
+    this.endTime = endTime;
+    this.remindBeforeMinutes = remindBeforeMinutes;
+  }
+
+  toJsonSchema() {
+    const event = {
+      'summary': this.title,
+      'description': this.description,
+      'start': {
+        'dateTime': this.startTime,
+        'timeZone': 'America/Los_Angeles'
+      },
+      'end': {
+        'dateTime': this.endTime,
+        'timeZone': 'America/Los_Angeles'
+      },
+      'reminders': {
+        'useDefault': false,
+        'overrides': [
+          {'method': 'popup', 'minutes': this.remindBeforeMinutes }
+        ]
+      }
+    }
+  }
+
+}
+
+const dayMap = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
+
 module.exports.Task = Task
+module.exports.Event = Event
+module.exports.dayMap = dayMap;

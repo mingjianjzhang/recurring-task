@@ -4,6 +4,7 @@ const app = express()
 
 const { Client } = require("@notionhq/client")
 const { Task } = require('./model.js')
+const { authorize, listEvents, createEvent, getEvent } = require('./calendar.js')
 const notion = new Client({ auth: process.env.NOTION_KEY })
 
 // http://expressjs.com/en/starter/static-files.html
@@ -16,11 +17,13 @@ app.get("/", function (request, response) {
 })
 
 app.post("/recurrentTasks", async function (request, response) {
-  const { parentTaskId, recurrenceType, startTime, endTime, startDate, endDate, recurrenceDays } = request.body
+  const { parentTaskId, recurrenceType, startTime, endTime, startDate, endDate, recurrenceDays, setReminders, remindBefore } = request.body
 
+  console.log(setReminders);
   let parentTaskName = '';
   let databaseId = '';
   let parentTask;
+
   // get name of parent task
   try {
     parentTask = await notion.pages.retrieve({page_id: parentTaskId});
@@ -34,30 +37,39 @@ app.post("/recurrentTasks", async function (request, response) {
     response.json({message: "error", data: error})
   }
 
+  // Create subtasks
   const subTask = new Task(parentTaskName, parentTaskId);
   let dateString;
   let recurStartTime;
   let recurEndTime;
+  let recurStartTimeInitial;
+  let recurEndTimeInitial;
 
+  // start time here is the hours:minutes
   if (startTime) {
     if (!endTime) {
       response.json({message: "error", data: "Must specify End Time if Start Time is specified"})
     }
-    dateString = startDate + "T" + startTime + ":00.000-07:00";
+    dateString = startDate + "T" + startTime + ":00.000";
+
+    // prepare the initial values at which we begin recurring
     recurStartTime = new Date(dateString);
+    recurStartTimeInitial = new Date(dateString);
     recurEndTime = new Date(dateString);
+    recurEndTimeInitial = new Date(dateString);
     const recurEndTimeSplit = endTime.split(':');
     recurEndTime.setHours(parseInt(recurEndTimeSplit[0]), parseInt(recurEndTimeSplit[1]));  
+    recurEndTimeInitial.setHours(parseInt(recurEndTimeSplit[0]), parseInt(recurEndTimeSplit[1]));  
   } else {
     dateString = startDate
     recurStartTime = new Date(dateString);
   }
-  // TODO: add validation if no endtime is specified
 
-
-  const terminalDateString = endDate + "T" + "23:59:00.000-07:00";
+  // terminal here means the last day on which an event should be recurred
+  const terminalDateString = endDate + "T" + "23:59:00.000";
   const terminalDate = new Date(terminalDateString);
 
+  // loop to create events
   while (recurStartTime.getTime() < terminalDate.getTime()) {
     if (recurrenceType === 'Custom' && !recurrenceDays.includes(recurStartTime.getDay().toString())) {
       recurStartTime.setDate(recurStartTime.getDate() + 1);
@@ -70,7 +82,6 @@ app.post("/recurrentTasks", async function (request, response) {
     try {
       // create a new sub-task under the Parent Task ID with the correct date.
       // Must also set the Priority and Kanban Status for it to appear on any of the views.
-
       const newItem = await notion.pages.create({
         parent: {
           type: "database_id",
@@ -79,7 +90,6 @@ app.post("/recurrentTasks", async function (request, response) {
         properties: subTask.toJsonSchema(recurStartTime, recurEndTime)
       })
       console.log("created new item");
-      console.log(newItem);
     } catch (error) {
       console.log(error);
     }
@@ -88,6 +98,28 @@ app.post("/recurrentTasks", async function (request, response) {
       recurEndTime.setDate(recurEndTime.getDate() + 1);
     }
   }
+  console.log('finished item creation');
+
+
+  // create a single recurring event on Google calendar based on specs.
+  if (setReminders) {
+    console.log("setting reminders...");
+    if (recurrenceType !== 'Custom') {
+      recurrenceDays = [];
+    }
+    const recurrenceDaysInt = recurrenceDays.map(parseInt);
+    authorize().then(auth => {
+      createEvent(
+        auth,
+        recurStartTimeInitial, 
+        recurEndTimeInitial, 
+        terminalDate, 
+        recurrenceDaysInt,
+        remindBefore,
+        parentTaskName,
+        parentTask.url)
+    }).catch(console.error);
+  }
 
   response.json({"message": "nice"})  
 
@@ -95,6 +127,18 @@ app.post("/recurrentTasks", async function (request, response) {
   // set a start date
 })
 
+app.post("/test", async function (request, response){
+  createEvent(
+    null, 
+    new Date("2023-10-11T12:00:00.000-07:00"), 
+    null, 
+    new Date("2023-10-11T23:59:00.000"), 
+    [4, 2, 1], 
+    null,
+    null);
+  // authorize().then(getEvent).catch(console.error);
+  response.json({message: "nice"})
+})
 // listen for requests :)
 const listener = app.listen(process.env.PORT, function () {
   console.log("Your app is listening on port " + listener.address().port)

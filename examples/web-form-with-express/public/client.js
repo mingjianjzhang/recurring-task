@@ -67,6 +67,7 @@ const appendApiResponse = function (apiResponse, el) {
     newAnchorTag.innerText = apiResponse.data.url
     el.appendChild(newAnchorTag)
   }
+  loadingIcon.classList.add('hide')
 }
 
 // Appends the blocks API response to the UI
@@ -112,6 +113,15 @@ recurrenceForm.onsubmit = async function (event) {
   const startDate = event.target.start_date.value
   const endDate = event.target.end_date.value
   const recurrenceDays = Array.from(selectDays.querySelectorAll("option:checked")).map(option => option.value);
+  const setReminders = event.target.set_reminder.checked;
+  const remindBefore = parseInt(event.target.remind_before.value);
+
+
+  const dada = JSON.stringify({ 
+    parentTaskId, recurrenceType, startTime, endTime, 
+    startDate, endDate, recurrenceDays, setReminders, remindBefore })
+
+  console.log(dada);
 
   // validations
   const timeRegExp = new RegExp('^(2[0-3]|[01]?[0-9]):([0-5]?[0-9])$')
@@ -119,7 +129,17 @@ recurrenceForm.onsubmit = async function (event) {
     appendApiResponse({message: "failed", data:"time must be in the format HH:mm"}, responseElement);
     return;
   }
-  const body = JSON.stringify({ parentTaskId, recurrenceType, startTime, endTime, startDate, endDate, recurrenceDays})
+
+  if (!Number.isInteger(remindBefore)) {
+    appendApiResponse({message: "failed", data:"Minutes before must be an integer value"}, responseElement);
+    return;
+  }
+
+
+  // prepare body
+  const body = JSON.stringify({ parentTaskId, recurrenceType, startTime, endTime, startDate, endDate, recurrenceDays, setReminders, remindBefore})
+  
+  // API call
   const recurrentTasksResponse = await fetch("/recurrentTasks", {
     method: "POST",
     headers: {
@@ -128,8 +148,9 @@ recurrenceForm.onsubmit = async function (event) {
     body
   });
 
+  // post-response processing
   const recurrentTasksData = await recurrentTasksResponse.json()
-  loadingIcon.classList.add('hide')
+  loadingIcon.classList.add('hide');
   appendApiResponse(recurrentTasksData, responseElement)
 }
 
@@ -137,7 +158,7 @@ getButton.onclick = async function (event) {
   console.log("I was clicked, bro");
 
   const request = { itemId: "68a4d1a9-c8d0-41cc-b5ef-d7c0689bd790" }
-  const getItemResponse = await fetch("/getItem", {
+  const getItemResponse = await fetch("/test", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
