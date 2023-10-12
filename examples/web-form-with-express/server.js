@@ -104,10 +104,12 @@ app.post("/recurrentTasks", async function (request, response) {
   // create a single recurring event on Google calendar based on specs.
   if (setReminders) {
     console.log("setting reminders...");
+    let recurrenceDaysInt;
     if (recurrenceType !== 'Custom') {
-      recurrenceDays = [0, 1, 2, 3, 4, 5, 6];
+      recurrenceDaysInt = [0, 1, 2, 3, 4, 5, 6];
+    } else {
+      recurrenceDaysInt = recurrenceDays.map(day => parseInt(day));
     }
-    const recurrenceDaysInt = recurrenceDays.map(day => parseInt(day));
     console.log(recurrenceDays);
     console.log(recurrenceDaysInt);
     authorize().then(auth => {
