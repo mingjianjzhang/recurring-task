@@ -105,7 +105,7 @@ app.post("/recurrentTasks", async function (request, response) {
   if (setReminders) {
     console.log("setting reminders...");
     if (recurrenceType !== 'Custom') {
-      recurrenceDays = [];
+      recurrenceDays = [0, 1, 2, 3, 4, 5, 6];
     }
     const recurrenceDaysInt = recurrenceDays.map(day => parseInt(day));
     console.log(recurrenceDays);
