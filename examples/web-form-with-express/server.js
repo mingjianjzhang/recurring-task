@@ -107,7 +107,9 @@ app.post("/recurrentTasks", async function (request, response) {
     if (recurrenceType !== 'Custom') {
       recurrenceDays = [];
     }
-    const recurrenceDaysInt = recurrenceDays.map(parseInt);
+    const recurrenceDaysInt = recurrenceDays.map(day => parseInt(day));
+    console.log(recurrenceDays);
+    console.log(recurrenceDaysInt);
     authorize().then(auth => {
       createEvent(
         auth,
