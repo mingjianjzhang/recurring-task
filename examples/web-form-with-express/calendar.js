@@ -109,7 +109,10 @@ async function getEvent(auth) {
     console.log(event.data);
 }
 
-function createEvent(auth, startTime, endTime, endDate, recurrenceDays, remindBefore, parentTaskName, parentTaskUrl) {
+function createEvent(
+    auth, startTime, endTime, 
+    endDate, recurrenceDays, reminderTimes, 
+    parentTaskName, parentTaskUrl) {
   
   // initialize client
   const calendar = google.calendar({version: 'v3', auth});
@@ -133,6 +136,11 @@ function createEvent(auth, startTime, endTime, endDate, recurrenceDays, remindBe
    console.log(recurString);
   }
 
+
+  const reminderOverrides = reminderTimes.map(time => {
+    return { 'method': 'popup', 'minutes': time }
+  })
+
   // build event
   const event = {
     'summary': parentTaskName,
@@ -150,9 +158,7 @@ function createEvent(auth, startTime, endTime, endDate, recurrenceDays, remindBe
     ],
     'reminders': {
       'useDefault': false,
-      'overrides': [
-        {'method': 'popup', 'minutes': remindBefore},
-      ],
+      'overrides': reminderOverrides
     },
   };
   

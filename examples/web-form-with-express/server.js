@@ -17,9 +17,8 @@ app.get("/", function (request, response) {
 })
 
 app.post("/recurrentTasks", async function (request, response) {
-  const { parentTaskId, recurrenceType, startTime, endTime, startDate, endDate, recurrenceDays, setReminders, remindBefore } = request.body
+  const { parentTaskId, recurrenceType, startTime, endTime, startDate, endDate, recurrenceDays, reminderTimes } = request.body
 
-  console.log(setReminders);
   let parentTaskName = '';
   let databaseId = '';
   let parentTask;
@@ -102,7 +101,7 @@ app.post("/recurrentTasks", async function (request, response) {
 
 
   // create a single recurring event on Google calendar based on specs.
-  if (setReminders) {
+  if (reminderTimes.length > 0) {
     console.log("setting reminders...");
     let recurrenceDaysInt;
     if (recurrenceType !== 'Custom') {
@@ -119,7 +118,7 @@ app.post("/recurrentTasks", async function (request, response) {
         recurEndTimeInitial, 
         terminalDate, 
         recurrenceDaysInt,
-        remindBefore,
+        reminderTimes,
         parentTaskName,
         parentTask.url)
     }).catch(console.error);

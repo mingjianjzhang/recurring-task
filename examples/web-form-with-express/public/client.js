@@ -25,16 +25,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 });
+
+
 /**
  * Define variables that reference elements included in /views/index.html:
  */
 
 // Buttons
 const getButton = document.getElementById("getItem")
+const createReminder = document.getElementById("addReminder");
 // Forms
 const recurrenceForm = document.getElementById("recurrenceForm")
 const recurrenceType = document.getElementById("recurrence_type")
 const selectDays = document.getElementById("select_days")
+const reminderContainer = document.getElementById('reminders');
 // Loading
 const loadingIcon = document.getElementById('loading');
 // Response data
@@ -44,6 +48,36 @@ const responseElement = document.getElementById("results")
  * Functions to handle appending new content to /views/index.html
  */
 
+
+
+function createReminderRow() {
+  const row = document.createElement('div');
+  row.classList.add('row', 'reminder-row');
+  const col = document.createElement('div');
+  col.classList.add("col", "s6", "input-field");
+  row.appendChild(col);
+  const input = document.createElement('input');
+  input.classList.add('reminderInput')
+  input.setAttribute('type', 'text');
+  const label = document.createElement('label');
+  label.appendChild(document.createTextNode("Minutes before"))
+  col.appendChild(input);
+  col.appendChild(label);
+  reminderContainer.appendChild(row);
+
+  const buttonCol = document.createElement('div');
+  buttonCol.classList.add("col", "s3", "valign-wrapper");
+  row.appendChild(buttonCol);
+  const removeButton = document.createElement('button');
+  removeButton.setAttribute('type', 'button');
+  removeButton.appendChild(document.createTextNode("Remove"))
+
+  buttonCol.appendChild(removeButton);
+  removeButton.onclick = function (event) {
+    console.log(removeButton.parentNode.parentNode.remove());
+  }
+
+}
 // Appends the API response to the UI
 const appendApiResponse = function (apiResponse, el) {
   console.log(apiResponse)
@@ -106,22 +140,37 @@ recurrenceType.onchange = function (event) {
 recurrenceForm.onsubmit = async function (event) {
   event.preventDefault()
   loadingIcon.classList.remove('hide');
-  const parentTaskId = event.target.task_id.value;
+
+  // get ID from URL
+  let parentTaskId;
+  const idRegEx = new RegExp('[a-zA-Z0-9]{32}$');
+  const idMatch = event.target.task_id.value.match(idRegEx)
+  if (idMatch) {
+      parentTaskId = idMatch[0];
+  } else {
+      appendApiResponse({message: "failed", data:"Task ID must be 32 character alphanumeric string"}, responseElement);
+      return;
+  }
+
   const recurrenceType = event.target.recurrence_type.value;
   const startTime = event.target.start_time.value
   const endTime = event.target.end_time.value
   const startDate = event.target.start_date.value
   const endDate = event.target.end_date.value
   const recurrenceDays = Array.from(selectDays.querySelectorAll("option:checked")).map(option => option.value);
-  const setReminders = event.target.set_reminder.checked;
-  const remindBefore = parseInt(event.target.remind_before.value);
 
+  // prepare reminders
+  const reminderInputs = document.querySelectorAll('.reminderInput')
+  const reminderTimes = Array.from(reminderInputs)
+    .filter(input => Number.isInteger(parseInt(input.value)))
+    .map(input => parseInt(input.value))
 
-  const dada = JSON.stringify({ 
-    parentTaskId, recurrenceType, startTime, endTime, 
-    startDate, endDate, recurrenceDays, setReminders, remindBefore })
-
-  console.log(dada);
+  
+  
+  if (reminderInputs.length !== reminderTimes.length) {
+      appendApiResponse({message: "failed", data:"Minutes before must be an integer value"}, responseElement);
+      return;
+  }
 
   // validations
   const timeRegExp = new RegExp('^(2[0-3]|[01]?[0-9]):([0-5]?[0-9])$')
@@ -130,15 +179,10 @@ recurrenceForm.onsubmit = async function (event) {
     return;
   }
 
-  if (!Number.isInteger(remindBefore)) {
-    appendApiResponse({message: "failed", data:"Minutes before must be an integer value"}, responseElement);
-    return;
-  }
-
-
   // prepare body
-  const body = JSON.stringify({ parentTaskId, recurrenceType, startTime, endTime, startDate, endDate, recurrenceDays, setReminders, remindBefore})
-  
+  const body = JSON.stringify({ parentTaskId, recurrenceType, startTime, endTime, startDate, endDate, recurrenceDays, reminderTimes})
+  console.log(body);
+
   // API call
   const recurrentTasksResponse = await fetch("/recurrentTasks", {
     method: "POST",
@@ -154,18 +198,24 @@ recurrenceForm.onsubmit = async function (event) {
   appendApiResponse(recurrentTasksData, responseElement)
 }
 
-getButton.onclick = async function (event) {
-  console.log("I was clicked, bro");
+// getButton.onclick = async function (event) {
+//   console.log("I was clicked, bro");
 
-  const request = { itemId: "68a4d1a9-c8d0-41cc-b5ef-d7c0689bd790" }
-  const getItemResponse = await fetch("/test", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(request)
-  })
+//   const request = { itemId: "68a4d1a9-c8d0-41cc-b5ef-d7c0689bd790" }
+//   const getItemResponse = await fetch("/test", {
+//     method: "POST",
+//     headers: {
+//       "Content-Type": "application/json",
+//     },
+//     body: JSON.stringify(request)
+//   })
 
-  const getItemData = await getItemResponse.json()
-  appendApiResponse(getItemData, dbResponseEl)
+//   const getItemData = await getItemResponse.json()
+//   appendApiResponse(getItemData, dbResponseEl)
+// }
+
+createReminder.onclick = function (event) {
+  console.log("hey");
+  event.preventDefault();
+  createReminderRow();
 }
