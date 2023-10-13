@@ -143,7 +143,7 @@ recurrenceForm.onsubmit = async function (event) {
 
   // get ID from URL
   let parentTaskId;
-  const idRegEx = new RegExp('[a-zA-Z0-9]{32}$');
+  const idRegEx = new RegExp('[a-zA-Z0-9]{32}');
   const idMatch = event.target.task_id.value.match(idRegEx)
   if (idMatch) {
       parentTaskId = idMatch[0];
