@@ -34,11 +34,14 @@ document.addEventListener('DOMContentLoaded', function() {
 // Buttons
 const getButton = document.getElementById("getItem")
 const createReminder = document.getElementById("addReminder");
+const attachReminder = document.getElementById("attachReminder");
 // Forms
 const recurrenceForm = document.getElementById("recurrenceForm")
+const attachRemindersForm = document.getElementById("attach-reminders");
 const recurrenceType = document.getElementById("recurrence_type")
 const selectDays = document.getElementById("select_days")
 const reminderContainer = document.getElementById('reminders');
+const attachReminderContainer = document.getElementById('attach-reminder-container');
 // Loading
 const loadingIcon = document.getElementById('loading');
 // Response data
@@ -50,7 +53,7 @@ const responseElement = document.getElementById("results")
 
 
 
-function createReminderRow() {
+function createReminderRow(container) {
   const row = document.createElement('div');
   row.classList.add('row', 'reminder-row');
   const col = document.createElement('div');
@@ -63,7 +66,7 @@ function createReminderRow() {
   label.appendChild(document.createTextNode("Minutes before"))
   col.appendChild(input);
   col.appendChild(label);
-  reminderContainer.appendChild(row);
+  container.appendChild(row);
 
   const buttonCol = document.createElement('div');
   buttonCol.classList.add("col", "s3", "valign-wrapper");
@@ -119,6 +122,61 @@ const appendBlocksResponse = function (apiResponse, el) {
   el.appendChild(newParagraphId)
 }
 
+
+/**
+ * 
+ * @param {REMINDERS FORM } event 
+ * @returns 
+ */
+
+attachRemindersForm.onsubmit = async function (event) {
+  event.preventDefault()
+  loadingIcon.classList.remove('hide');
+
+  // get ID from URL
+  let parentTaskId;
+  const idRegEx = new RegExp('[a-zA-Z0-9]{32}');
+  const idMatch = event.target.reminder_task_id.value.match(idRegEx)
+  if (idMatch) {
+      parentTaskId = idMatch[0];
+  } else {
+      appendApiResponse({message: "failed", data:"Task ID must be 32 character alphanumeric string"}, responseElement);
+      return;
+  }
+
+  const reminderInputs = attachRemindersForm.querySelectorAll('.reminderInput')
+  const reminderTimes = Array.from(reminderInputs)
+    .filter(input => Number.isInteger(parseInt(input.value)))
+    .map(input => parseInt(input.value))
+
+    console.log(reminderTimes);
+
+
+  if (reminderInputs.length !== reminderTimes.length) {
+      appendApiResponse({message: "failed", data:"Minutes before must be an integer value"}, responseElement);
+      return;
+  }
+
+
+  const body = JSON.stringify({ parentTaskId, reminderTimes })
+  console.log(body);
+  const attachRemindersResponse = await fetch("/attachReminders", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body
+  });
+
+  // post-response processing
+  const attachRemindersData = await attachRemindersResponse.json()
+  loadingIcon.classList.add('hide');
+  appendApiResponse(attachRemindersData, responseElement)
+
+
+
+
+}
 /**
  * Attach submit event handlers to each form included in /views/index.html
  */
@@ -217,5 +275,11 @@ recurrenceForm.onsubmit = async function (event) {
 createReminder.onclick = function (event) {
   console.log("hey");
   event.preventDefault();
-  createReminderRow();
+  createReminderRow(reminderContainer);
+}
+
+attachReminder.onclick = function (event) {
+  console.log("attaching reminder");
+  event.preventDefault();
+  createReminderRow(attachReminderContainer);
 }

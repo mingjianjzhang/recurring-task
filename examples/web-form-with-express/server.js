@@ -142,6 +142,45 @@ app.post("/test", async function (request, response){
   // authorize().then(getEvent).catch(console.error);
   response.json({message: "nice"})
 })
+
+app.post("/attachReminders", async function (request, response) {
+  const { parentTaskId, reminderTimes } = request.body
+
+  console.log(parentTaskId);
+  const parentTask = await notion.pages.retrieve({page_id: parentTaskId});
+  
+  const parentTaskTitle = parentTask.properties['Task'].title.find(taskInfo => {
+    return taskInfo.type == 'text';
+  })
+
+  parentTask.properties['Sub-Tasks'].relation.forEach(async subTaskId => {
+    const subTask = await notion.pages.retrieve({page_id: subTaskId.id});
+    authorize().then(auth => {
+      createEvent(
+        auth,
+        subTask.properties["Due"].date.start, 
+        subTask.properties["Due"].date.end, 
+        null, 
+        null,
+        reminderTimes,
+        parentTaskTitle.plain_text,
+        parentTask.url)
+      console.log("Created google calendar event for: " + subTaskId.id);
+    }).catch(console.error);
+  })
+
+  response.json({"message": "nice"})  
+
+
+
+  // Fetch all sub-tasks of parent task from parent_task_id/reminder_task_id
+  // This will be done through properties["Sub-Tasks"].relation.forEach.
+
+  // For each sub-task, create a Google calendar event with the necessary reminders
+  // Start and End times can be pulled from propertes["Due"].date.start / date.end.
+
+
+});
 // listen for requests :)
 const listener = app.listen(process.env.PORT, function () {
   console.log("Your app is listening on port " + listener.address().port)

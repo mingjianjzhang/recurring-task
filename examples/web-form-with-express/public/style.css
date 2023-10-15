@@ -1,0 +1,10 @@
+form {
+    border: 2px solid black;
+    padding: 1.5em;
+}
+
+.console {
+    border: 2px solid blue;
+    min-height: 300px !important;
+    padding: 1.5em;
+}

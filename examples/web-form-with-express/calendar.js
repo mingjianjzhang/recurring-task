@@ -122,10 +122,14 @@ function createEvent(
   // build recurrence string
   // exampel: 'RRULE:FREQ=WEEKLY;WKST=SU;UNTIL=20240201T075959Z;BYDAY=WE,MO,FR' ]
   let recurString = '';
-  const untilString = dayjs(endDate).utc().format('YYYYMMDDTHHmmss[Z]')
-  if (recurrenceDays.length === 0) {
-    recurString = 'RRULE:FREQ=WEEKLY;WKST=SU;BYDAY=FR,MO,TH,TU,WE,SU'
+  let untilString = ''; 
+  if (recurrenceDays === null) {
+    // skip
+  } else if (recurrenceDays.length === 0) {
+    untilString = dayjs(endDate).utc().format('YYYYMMDDTHHmmss[Z]');
+    recurString = `RRULE:FREQ=WEEKLY;WKST=SU;UNTIL=${untilString};BYDAY=FR,MO,TH,TU,WE,SU;`
   } else {
+    untilString = dayjs(endDate).utc().format('YYYYMMDDTHHmmss[Z]')
     const byDay = dayMap.reduce((previousValue, currentValue, currentIndex) => {
         if (recurrenceDays.includes(currentIndex)) {
             return previousValue + currentValue + ',';
@@ -153,14 +157,14 @@ function createEvent(
       'dateTime': dayjs(endTime).format(),
       'timeZone': 'America/Los_Angeles',
     },
-    'recurrence': [
-      recurString
-    ],
     'reminders': {
       'useDefault': false,
       'overrides': reminderOverrides
     },
   };
+  if (recurString !== '') {
+    event['recurrence'] = [recurString];
+  }
   
   calendar.events.insert({
     auth: auth,
